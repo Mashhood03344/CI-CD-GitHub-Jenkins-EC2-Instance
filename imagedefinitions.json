@@ -1,0 +1,7 @@
+[
+  {
+    "name": "html-app-container",
+    "imageUri": "${ECR_REPO_URL}:latest"
+  }
+]
+
