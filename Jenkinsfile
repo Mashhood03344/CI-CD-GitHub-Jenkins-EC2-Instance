@@ -46,7 +46,7 @@ pipeline {
                         --instance-ids ${ec2_instance_id} \
                         --document-name "AWS-RunShellScript" \
                         --comment "Deploy Docker container" \
-                        --parameters 'commands=["sudo docker pull ${docker_repo_uri}:latest", "sudo docker stop sample-app || true", "sudo docker rm sample-app || true", "sudo docker run -d -p 80:80 --name sample-app ${sudo docker_repo_uri}:latest"]'
+                        --parameters 'commands=["docker pull ${docker_repo_uri}:latest", "docker stop sample-app || true", "docker rm sample-app || true", "docker run -d -p 80:80 --name sample-app ${sudo docker_repo_uri}:latest"]'
                     """
                 }
             }
