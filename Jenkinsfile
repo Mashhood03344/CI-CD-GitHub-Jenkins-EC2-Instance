@@ -39,14 +39,27 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 script {
-                    // Send SSM commands to EC2 to deploy the container
+                    def ssmCommand = sh(script: """
+                        aws ssm send-command \
+                            --region ${region} \
+                            --instance-ids ${ec2_instance_id} \
+                            --document-name "AWS-RunShellScript" \
+                            --comment "Deploy Docker container" \
+                            --parameters commands=[
+                                "docker pull ${docker_repo_uri}:latest",
+                                "docker stop sample-app || true",
+                                "docker rm sample-app || true",
+                                "docker run -d -p 80:80 --name sample-app ${docker_repo_uri}:latest"
+                            ] \
+                            --query "Command.CommandId" --output text
+                    """, returnStdout: true).trim()
+
+                    // Poll the SSM output for completion and print results
                     sh """
-                    aws ssm send-command \
-                        --region ${region} \
-                        --instance-ids ${ec2_instance_id} \
-                        --document-name "AWS-RunShellScript" \
-                        --comment "Deploy Docker container" \
-                        --parameters 'commands=["docker pull ${docker_repo_uri}:latest", "docker stop sample-app || true", "docker rm sample-app || true", "docker run -d -p 80:80 --name sample-app ${docker_repo_uri}:latest"]'
+                        aws ssm get-command-invocation \
+                            --command-id ${ssmCommand} \
+                            --instance-id ${ec2_instance_id} \
+                            --region ${region}
                     """
                 }
             }
