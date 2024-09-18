@@ -4,8 +4,6 @@ pipeline {
     environment {
         region = "us-east-1"
         docker_repo_uri = "905418229977.dkr.ecr.us-east-1.amazonaws.com/simple-html-app"
-        cluster = "simple-html-cluster"
-        ecs_service_name = "simple-html-service"
     }
 
     stages {
@@ -33,15 +31,6 @@ pipeline {
                     
                     // Push the Docker image with the 'latest' tag
                     sh "docker push ${docker_repo_uri}:latest"
-                }
-            }
-        }
-
-        stage('Deploy to ECS') {
-            steps {
-                script {
-                    // Update ECS service to force a new deployment
-                    sh "aws ecs update-service --cluster ${cluster} --service ${ecs_service_name} --force-new-deployment"
                 }
             }
         }
