@@ -50,13 +50,24 @@ pipeline {
                             --query "Command.CommandId" --output text
                     """, returnStdout: true).trim()
 
-                    // Poll the SSM output for completion and print results
-                    sh """
-                        aws ssm get-command-invocation \
-                            --command-id ${ssmCommand} \
-                            --instance-id ${ec2_instance_id} \
-                            --region ${region}
-                    """
+                    // Poll the SSM command until it's finished
+                    def status = "InProgress"
+                    while (status == "InProgress") {
+                        sleep(time: 10, unit: 'SECONDS')
+                        status = sh(script: """
+                            aws ssm get-command-invocation \
+                                --command-id ${ssmCommand} \
+                                --instance-id ${ec2_instance_id} \
+                                --region ${region} \
+                                --query "Status" --output text
+                        """, returnStdout: true).trim()
+                        echo "SSM command status: ${status}"
+                    }
+
+                    // Check final status
+                    if (status != "Success") {
+                        error "SSM command failed with status: ${status}"
+                    }
                 }
             }
         }
