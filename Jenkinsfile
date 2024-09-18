@@ -4,7 +4,7 @@ pipeline {
     environment {
         region = "us-east-1"
         docker_repo_uri = "905418229977.dkr.ecr.us-east-1.amazonaws.com/simple-html-app"
-        ec2_instance_id = "i-07bc8cba9d91653d9" // Replace with your EC2 instance ID
+        ec2_instance_id = "i-07bc8cba9d91653d9"
     }
 
     stages {
@@ -39,13 +39,14 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 script {
+                    // Authenticate EC2 instance to ECR before pulling the image
                     def ssmCommand = sh(script: """
                         aws ssm send-command \
                             --region ${region} \
                             --instance-ids ${ec2_instance_id} \
                             --document-name "AWS-RunShellScript" \
-                            --comment "Deploy Docker container" \
-                            --parameters 'commands=["docker pull ${docker_repo_uri}:latest", "docker stop sample-app || true", "docker rm sample-app || true", "docker run -d -p 80:80 --name sample-app ${docker_repo_uri}:latest"]' \
+                            --comment "Authenticate and Deploy Docker container" \
+                            --parameters 'commands=["aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${docker_repo_uri}", "docker pull ${docker_repo_uri}:latest", "docker stop sample-app || true", "docker rm sample-app || true", "docker run -d -p 80:80 --name sample-app ${docker_repo_uri}:latest"]' \
                             --query "Command.CommandId" --output text
                     """, returnStdout: true).trim()
 
