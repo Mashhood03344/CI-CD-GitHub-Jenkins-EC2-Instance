@@ -4,7 +4,7 @@ pipeline {
     environment {
         region = "us-east-1"
         docker_repo_uri = "905418229977.dkr.ecr.us-east-1.amazonaws.com/simple-html-app"
-        ec2_instance_id = "i-017560bee4864e29d" 
+        ec2_instance_id = "i-077db4b16a7d0ee5f" 
     }
 
     stages {
